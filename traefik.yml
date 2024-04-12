@@ -1,0 +1,14 @@
+api:
+  insecure: true
+
+providers:
+  docker: {}
+
+accessLog: {}
+
+tracing: 
+  jaeger:
+    traceContextHeaderName: trace-id
+    collector:
+      endpoint: http://jaeger:14268/api/traces?format=jaeger.
+      # endpoint: http://jaeger:4318/v1/traces

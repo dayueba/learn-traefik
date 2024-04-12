@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.11
+    # Enables the web UI and tells Traefik to listen to docker
+    # command: --api.insecure=true --providers.docker
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.yml:/etc/traefik/traefik.yml
+
+  backend:
+    build: backend/
+    scale: 3
+    labels:
+      - "traefik.http.routers.test_service.rule=Host(`test_service.docker.localhost`)"
+      - "traefik.http.middlewares.test_retry.retry.attempts=4"
+      - "traefik.http.middlewares.test_retry.retry.initialinterval=100ms"
+      - "traefik.http.middlewares.test-inflightreq.inflightreq.amount=1"
+      - "traefik.http.routers.test_service.middlewares=test_retry@docker, test-inflightreq@docker"
+  
+  jaeger:
+    image: jaegertracing/all-in-one
+    ports:
+      - "16686:16686"
